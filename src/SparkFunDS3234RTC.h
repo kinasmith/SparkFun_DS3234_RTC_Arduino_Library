@@ -24,6 +24,8 @@ Updated 16 October 2016 by Vassilis Serasidis <avrsite@yahoo.gr>
 #ifndef SPARKFUNDS3234RTC_H
 #define SPARKFUNDS3234RTC_H
 
+#define SECONDS_FROM_1970_TO_2000 946684800
+
 #define TWELVE_HOUR_MODE (1<<6) // 12/24-hour Mode bit in Hour register
 #define TWELVE_HOUR_PM (1<<5)   // am/pm bit in hour register
 
@@ -38,6 +40,8 @@ Updated 16 October 2016 by Vassilis Serasidis <avrsite@yahoo.gr>
 #define ALARM_1_FLAG_BIT (1<<0) // Alarm 1 flag in control/status register
 #define ALARM_2_FLAG_BIT (1<<1) // Alarm 2 flag in control/status register
 #define ALARM_INTCN_BIT (1<<2)  // Interrupt-enable bit in control register
+
+
 
 #define TIME_ARRAY_LENGTH 7 // Total number of writable time values in device
 enum time_order {
@@ -99,7 +103,7 @@ static const char *dayIntToStr[7] {
 	"Wednesday",
 	"Thursday",
 	"Friday",
-	"Saturday"	
+	"Saturday"
 };
 
 // dayIntToChar -- convert day integer to character
@@ -116,20 +120,20 @@ public:
 	DS3234();
 	// Begin -- Initialize SPI interface, and sets up the chip-select pin
 	void begin(uint8_t csPin);
-	
+
 	///////////////////////
 	// Setting the Clock //
 	///////////////////////
 	// setTime -- Set time and date/day registers of DS3234
 	void setTime(uint8_t sec, uint8_t min, uint8_t hour,
 	             uint8_t day, uint8_t date, uint8_t month, uint8_t year);
-	void setTime(uint8_t sec, uint8_t min, uint8_t hour12, bool pm, 
+	void setTime(uint8_t sec, uint8_t min, uint8_t hour12, bool pm,
 	             uint8_t day, uint8_t date, uint8_t month, uint8_t year);
 	// setTime -- Set time and date/day registers of DS3234 (using data array)
 	void setTime(uint8_t * time, uint8_t len);
 	// autoTime -- Set time with compiler time/date
 	bool autoTime();
-	
+
 	// To set specific values of the clock, use the set____ functions:
 	void setSecond(uint8_t s);
 	void setMinute(uint8_t m);
@@ -138,14 +142,14 @@ public:
 	void setDate(uint8_t d);
 	void setMonth(uint8_t mo);
 	void setYear(uint8_t y);
-	
+
 	///////////////////////
 	// Reading the Clock //
 	///////////////////////
 	// update -- Read all time/date registers and update the _time array
 	void  update(void);
 	// update should be performed before any of the following. It will update
-	//   all values at one time.	
+	//   all values at one time.
 	inline uint8_t second(void) { return BCDtoDEC(_time[TIME_SECONDS]); };
 	inline uint8_t minute(void) { return BCDtoDEC(_time[TIME_MINUTES]); };
 	inline uint8_t hour(void) { return BCDtoDEC(_time[TIME_HOURS]); };
@@ -155,7 +159,7 @@ public:
 	inline uint8_t date(void) { return BCDtoDEC(_time[TIME_DATE]); };
 	inline uint8_t month(void) { return BCDtoDEC(_time[TIME_MONTH]);	};
 	inline uint8_t year(void) { return BCDtoDEC(_time[TIME_YEAR]); };
-	
+
 	// To read a single value at a time, use the get___ functions:
 	uint8_t getSecond(void);
 	uint8_t getMinute(void);
@@ -164,15 +168,17 @@ public:
 	uint8_t getDate(void);
 	uint8_t getMonth(void);
 	uint8_t getYear(void);
-	
+
+	uint32_t unixtime(void);
+
 	// is12Hour -- check if the DS3234 is in 12-hour mode | returns true if 12-hour mode
 	bool is12Hour(void);
 	// pm -- Check if 12-hour state is AM or PM | returns true if PM
 	bool pm(void);
-	
+
 	// DS3234 has a die-temperature reading. Value is produced in multiples of 0.25 deg C
 	float temperature(void);
-	
+
 	/////////////////////////////
 	// Alarm Setting Functions //
 	/////////////////////////////
@@ -180,7 +186,7 @@ public:
 	// Any of those can be masked out -- ignored for an alarm match. By setting
 	// If a value is set to 255, the library will mask out that data.
 	// By default the "date" value is the day-of-month (1-31)
-	// The "day" boolean changes the "date" value to a day (between 1-7). 
+	// The "day" boolean changes the "date" value to a day (between 1-7).
 	void setAlarm1(uint8_t second = 255, uint8_t minute = 255, uint8_t hour = 255, uint8_t date = 255, bool day = false);
 	// Second alarm 1 set function if the clock is in 12-hour mode:
 	void setAlarm1(uint8_t second, uint8_t minute, uint8_t hour12, bool pm, uint8_t date = 255, bool day = false);
@@ -188,47 +194,48 @@ public:
 	void setAlarm2(uint8_t minute = 255, uint8_t hour = 255, uint8_t date = 255, bool day = false);
 	// Second alarm 2 set function if the clock is in 12-hour mode:
 	void setAlarm2(uint8_t minute, uint8_t hour12, bool pm, uint8_t date = 255, bool day = false);
-	
+
 	// The SQW pin can be used as an interrupt. It is active-low, and can be
 	// set to trigger on alarm 1 and/or alarm 2:
 	void enableAlarmInterrupt(bool alarm1 = true, bool alarm2 = true);
-	
+
 	// alarm1 and alarm2 check their respective flag in the control/status
 	// register. They return true is the flag is set.
 	// The "clear" boolean, commands the alarm function to clear the flag
 	// (assuming it was set).
 	bool alarm1(bool clear = true);
-	bool alarm2(bool clear = true);	
-	
+	bool alarm2(bool clear = true);
+
 	///////////////////////////////
 	// SQW Pin Control Functions //
 	///////////////////////////////
 	void writeSQW(sqw_rate value); // Write SQW pin high, low, or to a set rate
-	
+
 	/////////////////////////////
 	// Misc. Control Functions //
 	/////////////////////////////
 	void enable(void); // Enable the oscillator
 	void disable(void); // Disable the oscillator (no counting!)
-	
+
 	void set12Hour(bool enable12 = true); // Enable/disable 12-hour mode
 	void set24Hour(bool enable24 = true); // Enable/disable 24-hour mode
-	
+
   void writeToSRAM(uint8_t address, uint8_t data);
   uint8_t readFromSRAM(uint8_t address);
-  
+
 private:
 	uint8_t _csPin;
 	uint8_t _time[TIME_ARRAY_LENGTH];
 	bool _pm;
-	
+
 	uint8_t BCDtoDEC(uint8_t val);
 	uint8_t DECtoBCD(uint8_t val);
-	
 	void spiWriteBytes(DS3234_registers reg, uint8_t * values, uint8_t len);
 	void spiWriteByte(DS3234_registers reg, uint8_t value);
 	uint8_t spiReadByte(DS3234_registers reg);
 	void spiReadBytes(DS3234_registers reg, uint8_t * dest, uint8_t len);
+	uint16_t date2days(uint16_t y, uint8_t m, uint8_t d);
+	long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s);
 };
 
 extern DS3234 rtc;

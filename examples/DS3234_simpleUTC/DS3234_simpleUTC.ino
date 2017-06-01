@@ -44,7 +44,7 @@ void setup()
   // You can use the autoTime() function to set the RTC's clock and
   // date to the compiliers predefined time. (It'll be a few seconds
   // behind, but close!)
-  rtc.autoTime();
+  // rtc.autoTime();
   // Or you can use the rtc.setTime(s, m, h, day, date, month, year)
   // function to explicitly set the time:
   // e.g. 7:32:16 | Monday October 31, 2016:
@@ -71,35 +71,12 @@ void loop()
 
   if (rtc.second() != lastSecond) // If the second has changed
   {
-    printTime(); // Print the new time
-
+    printTime();
+    Serial.println(rtc.unixtime());
     lastSecond = rtc.second(); // Update lastSecond value
   }
-
-  // Check for alarm interrupts
-#ifdef INTERRUPT_PIN
-  // Interrupt pin is active-low, if it's low, an alarm is triggered
-  if (!digitalRead(INTERRUPT_PIN))
-  {
-#endif
-    // Check rtc.alarm1() to see if alarm 1 triggered the interrupt
-    if (rtc.alarm1())
-    {
-      Serial.println("ALARM 1!");
-      // Re-set the alarm for when s=30:
-      rtc.setAlarm1(30);
-    }
-    // Check rtc.alarm2() to see if alarm 2 triggered the interrupt
-    if (rtc.alarm2())
-    {
-      Serial.println("ALARM 2!");
-      // Re-set the alarm for when m increments by 1
-      rtc.setAlarm2(rtc.minute() + 1, rtc.hour());
-    }
-#ifdef INTERRUPT_PIN
-  }
-#endif
 }
+
 
 void printTime()
 {

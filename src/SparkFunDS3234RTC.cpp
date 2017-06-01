@@ -81,7 +81,7 @@ DS3234::DS3234()
 void DS3234::begin(uint8_t csPin)
 {
 	_csPin = csPin;
-	
+
 #ifdef ARDUINO_ARCH_AVR
 	pinMode(SS, OUTPUT); // In master mode, Arduino Uno's (ATmega328 in general) pin 10 must be output
 #endif
@@ -100,7 +100,7 @@ void DS3234::setTime(uint8_t sec, uint8_t min, uint8_t hour, uint8_t day, uint8_
 	_time[TIME_DATE] = DECtoBCD(date);
 	_time[TIME_MONTH] = DECtoBCD(month);
 	_time[TIME_YEAR] = DECtoBCD(year);
-	
+
 	setTime(_time, TIME_ARRAY_LENGTH);
 }
 
@@ -116,7 +116,7 @@ void DS3234::setTime(uint8_t sec, uint8_t min, uint8_t hour12, bool pm, uint8_t 
 	_time[TIME_DATE] = DECtoBCD(date);
 	_time[TIME_MONTH] = DECtoBCD(month);
 	_time[TIME_YEAR] = DECtoBCD(year);
-	
+
 	setTime(_time, TIME_ARRAY_LENGTH);
 }
 
@@ -125,7 +125,7 @@ void DS3234::setTime(uint8_t * time, uint8_t len)
 {
 	if (len != TIME_ARRAY_LENGTH)
 		return;
-	
+
 	spiWriteBytes(DS3234_REGISTER_BASE, time, TIME_ARRAY_LENGTH);
 }
 
@@ -158,11 +158,11 @@ bool DS3234::autoTime()
 	{
 		_time[TIME_HOURS] = DECtoBCD(_time[TIME_HOURS]);
 	}
-	
+
 	_time[TIME_MONTH] = DECtoBCD(BUILD_MONTH);
 	_time[TIME_DATE] = DECtoBCD(BUILD_DATE);
 	_time[TIME_YEAR] = DECtoBCD(BUILD_YEAR - 2000); //! Not Y2K (or Y2.1K)-proof :\
-	
+
 	// Calculate weekday (from here: http://stackoverflow.com/a/21235587)
 	// Result: 0 = Sunday, 6 = Saturday
 	int d = BUILD_DATE;
@@ -171,8 +171,8 @@ bool DS3234::autoTime()
 	int weekday = (d+=m<3?y--:y-2,23*m/9+d+4+y/4-y/100+y/400)%7;
 	weekday += 1; // Library defines Sunday=1, Saturday=7
 	_time[TIME_DAY] = DECtoBCD(weekday);
-	
-	
+
+
 	setTime(_time, TIME_ARRAY_LENGTH);
 }
 
@@ -180,21 +180,21 @@ bool DS3234::autoTime()
 void DS3234::update(void)
 {
 	uint8_t rtcReads[TIME_ARRAY_LENGTH];
-	
+
 	spiReadBytes(DS3234_REGISTER_BASE, rtcReads, TIME_ARRAY_LENGTH);
-	
+
 	for (int i=0; i<TIME_ARRAY_LENGTH; i++)
 	{
 		_time[i] = rtcReads[i];
 	}
-	
+
 	if (_time[TIME_HOURS] & TWELVE_HOUR_MODE)
 	{
 		if (_time[TIME_HOURS] & TWELVE_HOUR_PM)
 			_pm = true;
 		else
 			_pm = false;
-		
+
 		_time[TIME_HOURS] &= 0x1F; // Mask out 24-hour bit, am/pm from hours
 	}
 	else
@@ -207,7 +207,7 @@ void DS3234::update(void)
 uint8_t DS3234::getSecond(void)
 {
 	_time[TIME_SECONDS] = spiReadByte(DS3234_REGISTER_SECONDS);
-	
+
 	return BCDtoDEC(_time[TIME_SECONDS]);
 }
 
@@ -216,14 +216,14 @@ uint8_t DS3234::getMinute(void)
 {
 	_time[TIME_MINUTES] = spiReadByte(DS3234_REGISTER_MINUTES);
 
-	return BCDtoDEC(_time[TIME_MINUTES]);	
+	return BCDtoDEC(_time[TIME_MINUTES]);
 }
 
 // getHour -- read/return hour register of DS3234
 uint8_t DS3234::getHour(void)
 {
 	uint8_t hourRegister = spiReadByte(DS3234_REGISTER_HOURS);
-	
+
 	if (hourRegister & TWELVE_HOUR_MODE)
 		hourRegister &= 0x1F; // Mask out am/pm, 24-hour bit
 	_time[TIME_HOURS] = hourRegister;
@@ -236,7 +236,7 @@ uint8_t DS3234::getDay(void)
 {
 	_time[TIME_DAY] = spiReadByte(DS3234_REGISTER_DAY);
 
-	return BCDtoDEC(_time[TIME_DAY]);		
+	return BCDtoDEC(_time[TIME_DAY]);
 }
 
 // getDate -- read/return date register of DS3234
@@ -244,7 +244,7 @@ uint8_t DS3234::getDate(void)
 {
 	_time[TIME_DATE] = spiReadByte(DS3234_REGISTER_DATE);
 
-	return BCDtoDEC(_time[TIME_DATE]);		
+	return BCDtoDEC(_time[TIME_DATE]);
 }
 
 // getMonth -- read/return month register of DS3234
@@ -253,7 +253,7 @@ uint8_t DS3234::getMonth(void)
 	_time[TIME_MONTH] = spiReadByte(DS3234_REGISTER_MONTH);
 	_time[TIME_MONTH] &= 0x7F; // Mask out century bit
 
-	return BCDtoDEC(_time[TIME_MONTH]);	
+	return BCDtoDEC(_time[TIME_MONTH]);
 }
 
 // getYear -- read/return year register of DS3234
@@ -261,7 +261,7 @@ uint8_t DS3234::getYear(void)
 {
 	_time[TIME_YEAR] = spiReadByte(DS3234_REGISTER_YEAR);
 
-	return BCDtoDEC(_time[TIME_YEAR]);		
+	return BCDtoDEC(_time[TIME_YEAR]);
 }
 
 // setSecond -- set the second register of the DS3234
@@ -280,7 +280,7 @@ void DS3234::setMinute(uint8_t m)
 	if (m <= 59)
 	{
 		uint8_t _m = DECtoBCD(m);
-		spiWriteByte(DS3234_REGISTER_MINUTES, _m);		
+		spiWriteByte(DS3234_REGISTER_MINUTES, _m);
 	}
 }
 
@@ -348,20 +348,20 @@ void DS3234::set12Hour(bool enable12)
 void DS3234::set24Hour(bool enable24)
 {
 	uint8_t hourRegister = spiReadByte(DS3234_REGISTER_HOURS);
-	
+
 	bool hour12 = hourRegister & TWELVE_HOUR_MODE;
 	if ((hour12 && !enable24) || (!hour12 && enable24))
 		return;
-	
+
 	uint8_t oldHour;
 	uint8_t newHour;
-	
+
 	if (enable24)
 	{
 		oldHour = hourRegister & 0x1F; // Mask out am/pm and 12-hour mode
 		oldHour = BCDtoDEC(oldHour); // Convert to decimal
 		newHour = oldHour;
-		
+
 		bool hourPM = hourRegister & TWELVE_HOUR_PM;
 		if ((hourPM) && (oldHour >= 1)) newHour += 12;
 		else if (!(hourPM) && (oldHour == 12)) newHour = 0;
@@ -372,18 +372,18 @@ void DS3234::set24Hour(bool enable24)
 		oldHour = hourRegister & 0x3F; // Mask out am/pm and 12-hour mode
 		oldHour = BCDtoDEC(oldHour); // Convert to decimal
 		newHour = oldHour;
-		
-		if (oldHour == 0) 
+
+		if (oldHour == 0)
 			newHour = 12;
 		else if (oldHour >= 13)
 			newHour -= 12;
-		
+
 		newHour = DECtoBCD(newHour);
 		newHour |= TWELVE_HOUR_MODE; // Set bit 6 to set 12-hour mode
 		if (oldHour >= 12)
 			newHour |= TWELVE_HOUR_PM; // Set PM bit if necessary
 	}
-	
+
 	return spiWriteByte(DS3234_REGISTER_HOURS, newHour);
 }
 
@@ -391,7 +391,7 @@ void DS3234::set24Hour(bool enable24)
 bool DS3234::is12Hour(void)
 {
 	uint8_t hourRegister = spiReadByte(DS3234_REGISTER_HOURS);
-	
+
 	return hourRegister & TWELVE_HOUR_MODE;
 }
 
@@ -399,17 +399,17 @@ bool DS3234::is12Hour(void)
 bool DS3234::pm(void)
 {
 	uint8_t hourRegister = spiReadByte(DS3234_REGISTER_HOURS);
-	
-	return hourRegister & TWELVE_HOUR_PM;	
+
+	return hourRegister & TWELVE_HOUR_PM;
 }
 
 // enable -- enable the DS3234's oscillator.
 void DS3234::enable(void)
 {
 	uint8_t controlRegister = spiReadByte(DS3234_REGISTER_CONTROL);
-	
+
 	controlRegister &= ~(1<<7);
-	
+
 	spiWriteByte(DS3234_REGISTER_CONTROL, controlRegister);
 }
 
@@ -418,9 +418,9 @@ void DS3234::enable(void)
 void DS3234::disable(void)
 {
 	uint8_t controlRegister = spiReadByte(DS3234_REGISTER_CONTROL);
-	
+
 	controlRegister |= (1<<7);
-	
+
 	spiWriteByte(DS3234_REGISTER_CONTROL, controlRegister);
 }
 
@@ -437,9 +437,9 @@ void DS3234::setAlarm1(uint8_t second, uint8_t minute, uint8_t hour, uint8_t dat
 	uint8_t timeMax[4] = {59, 59, 23, 31};
 	if (day)
 		timeMax[3] = 7;
-	
+
 	spiReadBytes(DS3234_REGISTER_A1SEC, alarmRegister, 4); // Read current alarm values
-	
+
 	// Run through all four alarm values and set their register values:
 	for (int i=0; i<4; i++)
 	{
@@ -448,9 +448,9 @@ void DS3234::setAlarm1(uint8_t second, uint8_t minute, uint8_t hour, uint8_t dat
 		else if ((timeValue[i] >= timeMin[i]) && (timeValue[i] <= timeMax[i]))
 			alarmRegister[i] = DECtoBCD(timeValue[i]);
 	}
-	if (day) 
+	if (day)
 		alarmRegister[3] |= ALARM_DAY_BIT;
-	
+
 	spiWriteBytes(DS3234_REGISTER_A1SEC, alarmRegister, 4); // Write the values
 }
 
@@ -463,9 +463,9 @@ void DS3234::setAlarm1(uint8_t second, uint8_t minute, uint8_t hour12, bool pm, 
 	uint8_t timeMax[4] = {59, 59, 23, 31};
 	if (day)
 		timeMax[3] = 7;
-	
+
 	spiReadBytes(DS3234_REGISTER_A1SEC, alarmRegister, 4); // Read current alarm values
-	
+
 	// Run through all four alarm values and set their register values:
 	for (int i=0; i<4; i++)
 	{
@@ -474,11 +474,11 @@ void DS3234::setAlarm1(uint8_t second, uint8_t minute, uint8_t hour12, bool pm, 
 		else if ((timeValue[i] >= timeMin[i]) && (timeValue[i] <= timeMax[i]))
 			alarmRegister[i] = DECtoBCD(timeValue[i]);
 	}
-	if (day) 
+	if (day)
 		alarmRegister[3] |= ALARM_DAY_BIT;
 	alarmRegister[2] |= TWELVE_HOUR_MODE;
 	if (pm) alarmRegister[2] |= TWELVE_HOUR_PM;
-	
+
 	spiWriteBytes(DS3234_REGISTER_A1SEC, alarmRegister, 4); // Write the values
 }
 
@@ -495,9 +495,9 @@ void DS3234::setAlarm2(uint8_t minute, uint8_t hour, uint8_t date, bool day)
 	uint8_t timeMax[3] = {59, 23, 31};
 	if (day)
 		timeMax[2] = 7;
-	
+
 	spiReadBytes(DS3234_REGISTER_A2MIN, alarmRegister, 3); // Read all alarm 2 registers
-	
+
 	for (int i=0; i<3; i++)
 	{
 		if (timeValue[i] == 255) // If a value is 255, disable that alarm check
@@ -505,24 +505,24 @@ void DS3234::setAlarm2(uint8_t minute, uint8_t hour, uint8_t date, bool day)
 		else if ((timeValue[i] >= timeMin[i]) && (timeValue[i] <= timeMax[i]))
 			alarmRegister[i] = DECtoBCD(timeValue[i]);
 	}
-	if (day) 
+	if (day)
 		alarmRegister[2] |= ALARM_DAY_BIT;
-	
+
 	spiWriteBytes(DS3234_REGISTER_A2MIN, alarmRegister, 3);
 }
 
 // setAlarm2 (12-hour mode)
 void DS3234::setAlarm2(uint8_t minute, uint8_t hour12, bool pm, uint8_t date, bool day)
-{	
+{
 	uint8_t alarmRegister[3];
 	uint8_t timeValue[3] = {minute, hour12, date};
 	uint8_t timeMin[3] = {0, 0, 1};
 	uint8_t timeMax[3] = {59, 23, 31};
 	if (day)
 		timeMax[2] = 7;
-	
+
 	spiReadBytes(DS3234_REGISTER_A2MIN, alarmRegister, 3); // Read all alarm 2 registers
-	
+
 	for (int i=0; i<3; i++)
 	{
 		if (timeValue[i] == 255) // If a value is 255, disable that alarm check
@@ -530,11 +530,11 @@ void DS3234::setAlarm2(uint8_t minute, uint8_t hour12, bool pm, uint8_t date, bo
 		else if ((timeValue[i] >= timeMin[i]) && (timeValue[i] <= timeMax[i]))
 			alarmRegister[i] = DECtoBCD(timeValue[i]);
 	}
-	if (day) 
+	if (day)
 		alarmRegister[1] |= ALARM_DAY_BIT;
 	alarmRegister[1] |= TWELVE_HOUR_MODE;
 	if (pm) alarmRegister[1] |= TWELVE_HOUR_PM;
-	
+
 	spiWriteBytes(DS3234_REGISTER_A2MIN, alarmRegister, 3);
 }
 
@@ -542,7 +542,7 @@ void DS3234::setAlarm2(uint8_t minute, uint8_t hour12, bool pm, uint8_t date, bo
 bool DS3234::alarm1(bool clear)
 {
 	uint8_t statusRegister = spiReadByte(DS3234_REGISTER_STATUS);
-	
+
 	if (statusRegister & ALARM_1_FLAG_BIT)
 	{
 		if (clear)
@@ -552,7 +552,7 @@ bool DS3234::alarm1(bool clear)
 		}
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -560,7 +560,7 @@ bool DS3234::alarm1(bool clear)
 bool DS3234::alarm2(bool clear)
 {
 	uint8_t statusRegister = spiReadByte(DS3234_REGISTER_STATUS);
-	
+
 	if (statusRegister & ALARM_2_FLAG_BIT)
 	{
 		if (clear)
@@ -568,9 +568,9 @@ bool DS3234::alarm2(bool clear)
 			statusRegister &= ~(ALARM_2_FLAG_BIT);
 			spiWriteByte(DS3234_REGISTER_STATUS, statusRegister);
 		}
-		return true;	
+		return true;
 	}
-	
+
 	return false;
 }
 
@@ -579,25 +579,26 @@ void DS3234::enableAlarmInterrupt(bool alarm1, bool alarm2)
 {
 	uint8_t controlRegister = spiReadByte(DS3234_REGISTER_CONTROL);
 	controlRegister |= ALARM_INTCN_BIT;
-	if (alarm1) 
+	if (alarm1)
 		controlRegister |= (1<<0);
 	if (alarm2)
 		controlRegister |= (1<<1);
 	spiWriteByte(DS3234_REGISTER_CONTROL, controlRegister);
 }
 
+
 // writeSQW -- Set the SQW pin high, low, or to one of the square wave frequencies
 void DS3234::writeSQW(sqw_rate value)
 {
 	uint8_t controlRegister = spiReadByte(DS3234_REGISTER_CONTROL);
-	
+
 	controlRegister &= SQW_CONTROL_MASK; // Mask out RS1, RS2 bits (bits 3 and 4)
 	controlRegister |= (value << 3); // Add rate bits, shift left 3
 	controlRegister &= ~(SQW_ENABLE_BIT); // Clear INTCN bit to enable SQW output
 	spiWriteByte(DS3234_REGISTER_CONTROL, controlRegister);
 }
 
-// temperature -- Read the DS3234's die-temperature. 
+// temperature -- Read the DS3234's die-temperature.
 //  Value is produced in multiples of 0.25 deg C
 float DS3234::temperature(void)
 {
@@ -605,11 +606,11 @@ float DS3234::temperature(void)
 	int8_t integer;
 	uint8_t tempRegister[2];
 	spiReadBytes(DS3234_REGISTER_TEMPM, tempRegister, 2);
-	
+
 	integer = tempRegister[0];
 	tempRegister[1] = tempRegister[1] >> 6;
 	retVal = integer + ((float) tempRegister[1] * 0.25);
-	
+
 	return retVal;
 }
 
@@ -629,7 +630,7 @@ uint8_t DS3234::DECtoBCD(uint8_t val)
 void DS3234::spiWriteBytes(DS3234_registers reg, uint8_t * values, uint8_t len)
 {
 	uint8_t writeReg = reg | 0x80;
-	
+
 	SPI.beginTransaction(DS3234SPISettings);
 	digitalWrite(_csPin, LOW);
 	SPI.transfer(writeReg);
@@ -645,7 +646,7 @@ void DS3234::spiWriteBytes(DS3234_registers reg, uint8_t * values, uint8_t len)
 void DS3234::spiWriteByte(DS3234_registers reg, uint8_t value)
 {
 	uint8_t writeReg = reg | 0x80;
-	
+
 	SPI.beginTransaction(DS3234SPISettings);
 	digitalWrite(_csPin, LOW);
 	SPI.transfer(writeReg);
@@ -664,7 +665,7 @@ uint8_t DS3234::spiReadByte(DS3234_registers reg)
 	retVal = SPI.transfer(0x00);
 	digitalWrite(_csPin, HIGH);
 	SPI.endTransaction();
-	
+
 	return retVal;
 }
 
@@ -693,5 +694,40 @@ uint8_t DS3234::readFromSRAM(uint8_t address){
   return spiReadByte(DS3234_REGISTER_SRAMD);
 }
 
+
+uint32_t DS3234::unixtime(void)
+{
+	// uint16_t days = date2days(yOff, m, d);
+	// t = time2long(days, hh, mm, ss);
+	uint8_t y,m,d,hh,mm,ss;
+  uint32_t t;
+  y = getYear();
+  m = getMonth();
+  d = getDate();
+  hh = getHour();
+  mm = getMinute();
+  ss = getSecond();
+	uint16_t days = date2days(y, m, d);
+	t = time2long(days, hh, mm, ss);
+	t += SECONDS_FROM_1970_TO_2000;  // seconds from 1970 to 2000
+	return t;
+}
+
+const uint8_t daysInMonth[12] PROGMEM = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+// number of days since 2000/01/01, valid for 2001..2099
+uint16_t DS3234::date2days(uint16_t y, uint8_t m, uint8_t d) {
+		if (y >= 2000)
+				y -= 2000;
+		uint16_t days = d;
+		for (uint8_t i = 1; i < m; ++i)
+				days += pgm_read_byte(daysInMonth + i - 1);
+		if (m > 2 && y % 4 == 0)
+				++days;
+		return days + 365 * y + (y + 3) / 4 - 1;
+}
+
+long DS3234::time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s) {
+	return (((((days * 24UL) + h) * 60) + m) * 60) + s; //(days -> hours + hours)
+}
 
 DS3234 rtc; // Use rtc in sketches
